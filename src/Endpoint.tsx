@@ -1,21 +1,46 @@
+// This script is from https://github.com/codinglabs/figma-endpoint-scraper 
+// It's published freely under the MIT license
+// MIT License
+
+// Copyright (c) 2021 Philipp Steinacher
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import * as jsonPath from "jsonpath"
 
-type EndpointAttribute = [string, string]
-type FieldValueType = String | Array<String> | Uint8Array | Uint8Array[] | undefined
+export type EndpointAttribute = [string, string]
+export type FieldValueType = Array<string> | Array<Uint8Array> | undefined
 type DataStore = {
     lastParams?: Array<[string, string]>,
     data: StoreDataTypes
 }
 
 type StoreDataTypes = Object;
-type ParameterType = Array<[string, string]>
+export type ParameterType = Array<[string, string]>
 
 const API_BASE = ""
 
 const isValidURL = (url: string): boolean => {
     try {
-        new URL(this);
+        new URL(url);
     } catch (e) {
+        console.log("Not url", e)
         return false;
     }
 
@@ -24,7 +49,7 @@ const isValidURL = (url: string): boolean => {
 
 const isImageResourceURL = (url: string) => {
     if (isValidURL(url)) {
-        const supportedExtensions = ["jpg", "jpeg", "png"];
+        const supportedExtensions = [".jpg", ".jpeg", ".png"];
         const catchedExtension = supportedExtensions.map(ext => url.endsWith(ext));
 
         return catchedExtension.includes(true);
@@ -72,21 +97,33 @@ export class Endpoint {
         })
     }
 
-    sanitizeValue = (value: any[]): Promise<FieldValueType> => {
-        return new Promise((resolve, reject) => {
-            if (typeof(value) == "string"){
-                const stringValue = value as string;
+    sanitizeValue = (values: any[]): Promise<FieldValueType> => {
+        return new Promise((allResolve, allRejected) => {
+            const promises = values.map(rawValue => {
+                const value = String(rawValue);
     
-                if (isImageResourceURL(stringValue)) {
-                    this.fetchImage(stringValue)
-                        .then(image => resolve(image))
-                        .catch(e => reject(e));
+                if(isImageResourceURL(value)) {
+                    console.log("Image URL", value)
+                    return this.fetchImage(value);
                 } else {
-                    resolve(stringValue);
+                    console.log("Text", value)
+                    return Promise.resolve(value)
                 }
-            } else if (typeof(value) == "number") {
-                resolve(String(value));
-            }
+            })
+
+            let finalAvailableValues: Array<string | Uint8Array> = [];
+
+            const settled = Promise.allSettled(promises)
+                .then((results) => results.forEach(result => {
+                    if(result.status === "fulfilled") {
+                        finalAvailableValues.push(result.value)
+                    }
+                }))
+                .finally(() => {
+                    console.log(finalAvailableValues)
+                    allResolve(finalAvailableValues as FieldValueType)
+                })
+                .catch(e => allRejected(e));
         })
     }
 
@@ -102,7 +139,7 @@ export class Endpoint {
     store = (param?: ParameterType): Promise<StoreDataTypes> => {
         return new Promise((resolve, reject) => {
             if (this.store) {
-                if (param && param == this._storeCache.lastParams) {
+                if (param && this._storeCache && param == this._storeCache.lastParams) {
                     resolve(this._storeCache.data)
                 } else {
                     this.querryStore(param)
@@ -141,13 +178,21 @@ export class Endpoint {
     }
 
     endpointPathWithParameter = (param: ParameterType = []): string => {
-        let url = new URL(API_BASE+this.endpoint);
+        let url = API_BASE+this.endpoint;
         
         param.forEach(element => {
-            url.searchParams.set("%"+element[0], element[1])
+            url = this.replaceAll(url, "%"+element[0], element[1])
         });
 
         return url.toString();
+    }
+
+    replaceAll = (str: string, find: string, replace: string) => {
+        return str.replace(new RegExp(this.escapeRegExp(find), 'g'), replace);
+    }
+
+    escapeRegExp = (string: string) => {
+        return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
     }
 }
 
