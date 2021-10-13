@@ -34,13 +34,12 @@ type DataStore = {
 type StoreDataTypes = Object;
 export type ParameterType = Array<[string, string]>
 
-const API_BASE = ""
+const API_BASE = "";
 
 const isValidURL = (url: string): boolean => {
     try {
         new URL(url);
     } catch (e) {
-        console.log("Not url", e)
         return false;
     }
 
@@ -56,6 +55,14 @@ const isImageResourceURL = (url: string) => {
     } 
     
     return false;
+}
+
+const replaceAll = (str: string, find: string, replace: string) => {
+    return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+}
+
+const escapeRegExp = (string: string) => {
+    return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
 }
 
 export class Endpoint {
@@ -85,6 +92,16 @@ export class Endpoint {
         });
     }
 
+    queryFieldByAttributeName =(name: string, param?: ParameterType): Promise<FieldValueType> => {
+        const attribute = this.attributes.find(attr => attr[0] === name);
+        console.log(name)
+        if(attribute) {
+            return this.querryField(attribute, param);
+        }
+
+        return Promise.reject("Couldn't find attribute with name: "+name)
+    }
+
     filterStoreForField = (store: StoreDataTypes, path: string): Promise<any[]> => {
         return new Promise((resolve, reject) => {
             const result = jsonPath.query(store, path);
@@ -106,7 +123,6 @@ export class Endpoint {
                     console.log("Image URL", value)
                     return this.fetchImage(value);
                 } else {
-                    console.log("Text", value)
                     return Promise.resolve(value)
                 }
             })
@@ -120,7 +136,6 @@ export class Endpoint {
                     }
                 }))
                 .finally(() => {
-                    console.log(finalAvailableValues)
                     allResolve(finalAvailableValues as FieldValueType)
                 })
                 .catch(e => allRejected(e));
@@ -181,18 +196,10 @@ export class Endpoint {
         let url = API_BASE+this.endpoint;
         
         param.forEach(element => {
-            url = this.replaceAll(url, "%"+element[0], element[1])
+            url = replaceAll(url, "%"+element[0], element[1])
         });
 
         return url.toString();
-    }
-
-    replaceAll = (str: string, find: string, replace: string) => {
-        return str.replace(new RegExp(this.escapeRegExp(find), 'g'), replace);
-    }
-
-    escapeRegExp = (string: string) => {
-        return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
     }
 }
 
