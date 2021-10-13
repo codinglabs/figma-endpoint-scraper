@@ -193,7 +193,11 @@ export class Endpoint {
     }
 
     endpointPathWithParameter = (param: ParameterType = []): string => {
-        let url = API_BASE+this.endpoint;
+        let url = this.endpoint;
+
+        if (this.apiBase) {
+            url = this.apiBase+url;
+        }
         
         param.forEach(element => {
             url = replaceAll(url, "%"+element[0], element[1])
