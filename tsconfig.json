@@ -3,11 +3,15 @@
     "target": "es6",
     "lib": ["es2020", "dom"],
     "jsx": "react",
+    "module": "ES2020",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "declaration": true,
     "typeRoots": [
       "./node_modules/@types"
-    ]
-  }
+    ],
+    "outDir": "./lib"
+  },
+  "include": ["./src"]
 }

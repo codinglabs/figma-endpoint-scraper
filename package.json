@@ -1,13 +1,13 @@
 {
   "name": "figma-endpoint-scraper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A package that enables you to easily scrape API endpoints and import it to figma.",
-  "main": "src/Endpoint.ts",
-  "exports": {
-    ".": "./src/Endpoints.ts"
-  },
+  "main": "lib/Endpoint.js",
+  "module": "lib/Endpoint.js",
+  "files": ["lib/"],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "tsc": "npx tsc -p tsconfig.json",
+    "prepublishOnly": "npm run tsc"
   },
   "repository": {
     "type": "git",
@@ -26,5 +26,9 @@
   "homepage": "https://github.com/codinglabs/figma-endpoint-scraper#readme",
   "dependencies": {
     "jsonpath": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^16.10.7",
+    "typescript": "^4.4.4"
   }
 }
