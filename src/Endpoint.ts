@@ -24,15 +24,15 @@
 
 import * as jsonPath from "jsonpath"
 
-export type EndpointAttribute = [string, string]
-export type FieldValueType = Array<string> | Array<Uint8Array> | undefined
+type EndpointAttribute = [string, string]
+type FieldValueType = Array<string> | Array<Uint8Array> | undefined
 type DataStore = {
     lastParams?: Array<[string, string]>,
     data: StoreDataTypes
 }
 
 type StoreDataTypes = Object;
-export type ParameterType = Array<[string, string]>
+type ParameterType = Array<[string, string]>
 
 const API_BASE = "";
 
@@ -65,7 +65,7 @@ const escapeRegExp = (string: string) => {
     return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
 }
 
-export class Endpoint {
+class Endpoint {
     _storeCache?: DataStore;
     title: string;
     endpoint: string;
@@ -208,3 +208,4 @@ export class Endpoint {
 }
 
 export default Endpoint;
+export {EndpointAttribute, FieldValueType, ParameterType}

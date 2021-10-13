@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A package that enables you to easily scrape API endpoints and import it to figma.",
   "main": "src/Endpoint.ts",
+  "exports": {
+    ".": "./src/Endpoints.ts"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
